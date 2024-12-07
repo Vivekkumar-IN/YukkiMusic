@@ -1,5 +1,4 @@
-# Use the official lightweight Python image
-FROM python:3.13-bookworm
+FROM python:3.13.1-bookworm
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg git && \
