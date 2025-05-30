@@ -74,7 +74,7 @@ async def download_song(link: str):
                             raise Exception("API response did not provide a download URL.")
                         break
                     elif status == "downloading":
-                        await asyncio.sleep(4)
+                        await asyncio.sleep(2)
                     else:
                         error_msg = data.get("error") or data.get("message") or f"Unexpected status '{status}'"
                         raise Exception(f"API error: {error_msg}")
@@ -97,10 +97,10 @@ async def download_song(link: str):
             async with session.get(download_url) as file_response:
                 with open(file_path, 'wb') as f:
                     while True:
-                        chunk = await file_response.content.read(8192)
-                        if not chunk:
-                            break
-                        f.write(chunk)
+                        if chunk := chunk = await file_response.content.read(1024)
+                        
+                            f.write(chunk)
+                        break
                 return file_path
         except aiohttp.ClientError as e:
             print(f"Network or client error occurred while downloading: {e}")
