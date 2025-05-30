@@ -97,7 +97,7 @@ async def download_song(link: str):
             async with session.get(download_url) as file_response:
                 with open(file_path, 'wb') as f:
                     while True:
-                        if chunk := chunk = await file_response.content.read(1024)
+                        if chunk := await file_response.content.read(1024)
                         
                             f.write(chunk)
                         break
