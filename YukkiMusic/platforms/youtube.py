@@ -11,6 +11,9 @@ import asyncio
 import os
 import re
 
+import aiofiles
+import aiohttp
+
 from async_lru import alru_cache
 from py_yt import VideosSearch
 from pyrogram.enums import MessageEntityType
@@ -22,10 +25,10 @@ from config import cookies
 from YukkiMusic.utils.database import is_on_off
 from YukkiMusic.utils.decorators import asyncify
 from YukkiMusic.utils.formatters import seconds_to_min, time_to_seconds
-import aiohttp
 
 API_URL = os.getenv("API_URL", 'https://api.thequickearn.xyz')
 API_KEY = os.getenv("API_KEY")
+CHUNK_SIZE = 256 * 1024  # 256 KB
 NOTHING = {"cookies_dead": None}
 
 
@@ -49,15 +52,15 @@ async def shell_cmd(cmd):
 
 async def download_song(link: str):
     video_id = link.split('v=')[-1].split('&')[0]
-
     download_folder = "downloads"
+
     for ext in ["mp3", "m4a", "webm"]:
         file_path = f"{download_folder}/{video_id}.{ext}"
         if os.path.exists(file_path):
-            #print(f"File already exists: {file_path}")
             return file_path
 
     song_url = f"{API_URL}/song/{video_id}?api={API_KEY}"
+
     async with aiohttp.ClientSession() as session:
         for attempt in range(10):
             try:
@@ -85,29 +88,30 @@ async def download_song(link: str):
             print("⏱️ Max retries reached. Still downloading...")
             return None
 
-
         try:
             file_format = data.get("format", "mp3")
             file_extension = file_format.lower()
             file_name = f"{video_id}.{file_extension}"
-            download_folder = "downloads"
             os.makedirs(download_folder, exist_ok=True)
             file_path = os.path.join(download_folder, file_name)
 
             async with session.get(download_url) as file_response:
-                with open(file_path, 'wb') as f:
+                async with aiofiles.open(file_path, 'wb') as f:
                     while True:
-                        if chunk := await file_response.content.read(1024)
-                        
-                            f.write(chunk)
-                        break
-                return file_path
+                        chunk = await file_response.content.read(CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        await f.write(chunk)
+
+            return file_path
+
         except aiohttp.ClientError as e:
             print(f"Network or client error occurred while downloading: {e}")
             return None
         except Exception as e:
             print(f"Error occurred while downloading song: {e}")
             return None
+
     return None
 
 
