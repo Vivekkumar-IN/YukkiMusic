@@ -483,9 +483,7 @@ class YouTube:
         fpath = await download_song(link)
         if not fpath:
             raise ValueError("File not downloaded")
-        if video and not songvideo and not songaudio:
-            return fpath, True
-        return fpath
+        return fpath, True
         """if songvideo:
             return await song_video_dl()
 
