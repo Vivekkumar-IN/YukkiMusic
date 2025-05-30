@@ -22,6 +22,10 @@ from config import cookies
 from YukkiMusic.utils.database import is_on_off
 from YukkiMusic.utils.decorators import asyncify
 from YukkiMusic.utils.formatters import seconds_to_min, time_to_seconds
+import aiohttp
+
+API_URL = "h"
+API_KEY = os.getenv("API_KEY")
 
 NOTHING = {"cookies_dead": None}
 
@@ -39,6 +43,75 @@ async def shell_cmd(cmd):
         else:
             return errorz.decode("utf-8")
     return out.decode("utf-8")
+
+
+#  Copied from  https://github.com/cyberpixelpro/aviaxmusic/blob/master/AviaxMusic%2Fplatforms%2FYoutube.py#L29 
+
+
+async def download_song(link: str):
+    video_id = link.split('v=')[-1].split('&')[0]
+
+    download_folder = "downloads"
+    for ext in ["mp3", "m4a", "webm"]:
+        file_path = f"{download_folder}/{video_id}.{ext}"
+        if os.path.exists(file_path):
+            #print(f"File already exists: {file_path}")
+            return file_path
+
+    song_url = f"{API_URL}/song/{video_id}?api={API_KEY}"
+    async with aiohttp.ClientSession() as session:
+        for attempt in range(10):
+            try:
+                async with session.get(song_url) as response:
+                    if response.status != 200:
+                        raise Exception(f"API request failed with status code {response.status}")
+
+                    data = await response.json()
+                    status = data.get("status", "").lower()
+
+                    if status == "done":
+                        download_url = data.get("link")
+                        if not download_url:
+                            raise Exception("API response did not provide a download URL.")
+                        break
+                    elif status == "downloading":
+                        await asyncio.sleep(4)
+                    else:
+                        error_msg = data.get("error") or data.get("message") or f"Unexpected status '{status}'"
+                        raise Exception(f"API error: {error_msg}")
+            except Exception as e:
+                print(f"[FAIL] {e}")
+                return None
+        else:
+            print("⏱️ Max retries reached. Still downloading...")
+            return None
+
+
+        try:
+            file_format = data.get("format", "mp3")
+            file_extension = file_format.lower()
+            file_name = f"{video_id}.{file_extension}"
+            download_folder = "downloads"
+            os.makedirs(download_folder, exist_ok=True)
+            file_path = os.path.join(download_folder, file_name)
+
+            async with session.get(download_url) as file_response:
+                with open(file_path, 'wb') as f:
+                    while True:
+                        chunk = await file_response.content.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                return file_path
+        except aiohttp.ClientError as e:
+            print(f"Network or client error occurred while downloading: {e}")
+            return None
+        except Exception as e:
+            print(f"Error occurred while downloading song: {e}")
+            return None
+    return None
+
+
 
 
 class YouTube:
@@ -408,7 +481,11 @@ class YouTube:
                 file_path = os.path.join("downloads", filename)
                 return file_path
 
-        if songvideo:
+        fpath = await download_song(link)
+        if not fpath:
+            raise ValueError("File not downloaded")
+        return fpath
+        """if songvideo:
             return await song_video_dl()
 
         elif songaudio:
@@ -446,4 +523,4 @@ class YouTube:
             direct = True
             downloaded_file = await audio_dl()
 
-        return downloaded_file, direct
+        return downloaded_file, direct"""
