@@ -24,8 +24,8 @@ from YukkiMusic.utils.decorators import asyncify
 from YukkiMusic.utils.formatters import seconds_to_min, time_to_seconds
 import aiohttp
 
-API_URL = getenv("API_URL", 'https://api.thequickearn.xyz')
-API_KEY = getenv("API_KEY")
+API_URL = os.getenv("API_URL", 'https://api.thequickearn.xyz')
+API_KEY = os.getenv("API_KEY")
 NOTHING = {"cookies_dead": None}
 
 
