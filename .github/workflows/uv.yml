@@ -26,24 +26,23 @@ jobs:
         id: update
         run: |
           uv sync --refresh
-          uv pip list --outdated --format json > outdated.json
 
           python <<EOF
-          import json, os
+          import json
           from pathlib import Path
           import tomlkit
 
           pyproject_path = Path("pyproject.toml")
-          outdated = json.load(open("outdated.json"))
-          doc = tomlkit.parse(pyproject_path.read_text())
+          outdated = json.loads(__import__("subprocess").check_output(
+              ["uv", "pip", "list", "--outdated", "--format", "json"]
+          ))
 
+          doc = tomlkit.parse(pyproject_path.read_text())
           sections = [("project", "dependencies"), ("project", "optional-dependencies")]
-          updates = []
           changed = 0
 
           for dep in outdated:
               name = dep["name"]
-              current = dep["version"]
               latest = dep["latest_version"]
               for section, key in sections:
                   if section in doc and key in doc[section]:
@@ -54,21 +53,20 @@ jobs:
                               if deps[i] != new_dep:
                                   deps[i] = new_dep
                                   changed += 1
-                                  updates.append(
-                                      f"- `{name}`\n```diff\n- {current}\n+ {latest}\n```"
-                                  )
 
           pyproject_path.write_text(tomlkit.dumps(doc))
 
-          body = "" if not updates else "Updated packages:\n\n" + "\n\n".join(updates)
           title = "Update dependencies" if not changed else f"Update dependencies [{changed} packages]"
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
-              gh.write(f"updates<<EOF\n{body}\nEOF\n")
-              gh.write(f"title={title}\n")
+          with open("/tmp/title.txt", "w") as f:
+              f.write(title)
           EOF
 
           uv lock
+
+          echo "title=$(cat /tmp/title.txt)" >> $GITHUB_OUTPUT
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          git diff -U0 pyproject.toml | grep '^[+-][^+-]' >> $GITHUB_OUTPUT || true
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: pull request
         uses: peter-evans/create-pull-request@v7
@@ -76,7 +74,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: update deps"
           title: ${{ steps.update.outputs.title }}
-          body: ${{ steps.update.outputs.updates }}
+          body: |
+            Updated dependencies:
+
+            ```diff
+            ${{ steps.update.outputs.diff }}
+            ```
           branch: deps/update-pip-deps
           delete-branch: true
           author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
