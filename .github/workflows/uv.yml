@@ -39,6 +39,8 @@ jobs:
 
           sections = [("project", "dependencies"), ("project", "optional-dependencies")]
           updates = []
+          changed = 0
+
           for dep in outdated:
               name = dep["name"]
               current = dep["version"]
@@ -51,12 +53,15 @@ jobs:
                               new_dep = f"{name}=={latest}"
                               if deps[i] != new_dep:
                                   deps[i] = new_dep
-                                  updates.append(f"- `{name}`\n```diff\n- {current}\n+ {latest}\n```")
+                                  changed += 1
+                                  updates.append(
+                                      f"- `{name}`\n```diff\n- {current}\n+ {latest}\n```"
+                                  )
 
           pyproject_path.write_text(tomlkit.dumps(doc))
 
-          body = "" if not updates else "Updated packages:\n\n" + "\n".join(updates)
-          title = "Update deps" if not updates else f"Update deps ({len(updates)})"
+          body = "" if not updates else "Updated packages:\n\n" + "\n\n".join(updates)
+          title = "Update dependencies" if not changed else f"Update dependencies [{changed} packages]"
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
               gh.write(f"updates<<EOF\n{body}\nEOF\n")
