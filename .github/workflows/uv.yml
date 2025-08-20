@@ -65,7 +65,8 @@ jobs:
 
           echo "title=$(cat /tmp/title.txt)" >> $GITHUB_OUTPUT
           echo "diff<<EOF" >> $GITHUB_OUTPUT
-          git diff -U0 pyproject.toml | grep '^[+-][^+-]' >> $GITHUB_OUTPUT || true
+          git diff -U0 pyproject.toml | grep '^[+-][^+-]' | awk '{print} /^-/ {print ""}' >> $GITHUB_OUTPUT || true
+          # git diff -U0 pyproject.toml | grep '^[+-][^+-]' >> $GITHUB_OUTPUT || true
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: pull request
