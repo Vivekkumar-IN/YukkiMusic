@@ -2,10 +2,9 @@ name: Update lockfile
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened, edited]
     branches:
       - "**"
-
 jobs:
   update-uv-lock:
     if: github.actor == 'dependabot[bot]'
