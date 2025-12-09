@@ -74,5 +74,18 @@ func (ctx *Context) OnFrame(callback ntgcalls.FrameCallback) {
 }
 
 func (ctx *Context) Close() {
+	for chatId := range ctx.binding.Calls() {
+	  ctx.binding.Stop(chatId)
+	}
+	
+	ctx.p2pConfigs = nil
+	ctx.inputCalls = nil
+	ctx.inputGroupCalls = nil
+	ctx.pendingConnections = nil
+	ctx.callParticipants = nil
+	ctx.callSources = nil
+	ctx.waitConnect = nil
+	
 	ctx.binding.Free()
+	ctx.binding = nil
 }
