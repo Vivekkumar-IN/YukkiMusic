@@ -1,7 +1,9 @@
 package ntgcalls
 
 //#include "ntgcalls.h"
+//#include <stdlib.h>
 import "C"
+import "unsafe"
 
 type MediaDescription struct {
 	Microphone *AudioDescription
@@ -13,20 +15,24 @@ type MediaDescription struct {
 func (ctx *MediaDescription) ParseToC() C.ntg_media_description_struct {
 	var x C.ntg_media_description_struct
 	if ctx.Microphone != nil {
-		microphone := ctx.Microphone.ParseToC()
-		x.microphone = &microphone
+		cMic := C.malloc(C.size_t(unsafe.Sizeof(C.ntg_audio_description_struct{})))
+		*(*C.ntg_audio_description_struct)(cMic) = ctx.Microphone.ParseToC()
+		x.microphone = (*C.ntg_audio_description_struct)(cMic)
 	}
 	if ctx.Speaker != nil {
-		speaker := ctx.Speaker.ParseToC()
-		x.speaker = &speaker
+		cSpeaker := C.malloc(C.size_t(unsafe.Sizeof(C.ntg_audio_description_struct{})))
+		*(*C.ntg_audio_description_struct)(cSpeaker) = ctx.Speaker.ParseToC()
+		x.speaker = (*C.ntg_audio_description_struct)(cSpeaker)
 	}
 	if ctx.Camera != nil {
-		camera := ctx.Camera.ParseToC()
-		x.camera = &camera
+		cCamera := C.malloc(C.size_t(unsafe.Sizeof(C.ntg_video_description_struct{})))
+		*(*C.ntg_video_description_struct)(cCamera) = ctx.Camera.ParseToC()
+		x.camera = (*C.ntg_video_description_struct)(cCamera)
 	}
 	if ctx.Screen != nil {
-		screen := ctx.Screen.ParseToC()
-		x.screen = &screen
+		cScreen := C.malloc(C.size_t(unsafe.Sizeof(C.ntg_video_description_struct{})))
+		*(*C.ntg_video_description_struct)(cScreen) = ctx.Screen.ParseToC()
+		x.screen = (*C.ntg_video_description_struct)(cScreen)
 	}
 	return x
 }

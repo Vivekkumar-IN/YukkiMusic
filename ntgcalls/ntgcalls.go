@@ -349,6 +349,7 @@ func (ctx *Client) ExchangeKeys(chatId int64, gAB []byte, fingerprint int64) (Au
 	C.ntg_exchange_keys(C.uintptr_t(ctx.ptr), C.int64_t(chatId), gABC, gABSize, C.int64_t(fingerprint), &buffer, f.ParseToC())
 	f.wait()
 	defer C.free(unsafe.Pointer(gABC))
+	defer C.free(unsafe.Pointer(buffer.g_a_or_b))
 	return AuthParams{
 		GAOrB:          C.GoBytes(unsafe.Pointer(buffer.g_a_or_b), buffer.sizeGAB),
 		KeyFingerprint: int64(buffer.key_fingerprint),
@@ -408,8 +409,10 @@ func (ctx *Client) Connect(chatId int64, params string, isPresentation bool) err
 
 func (ctx *Client) SetStreamSources(chatId int64, streamMode StreamMode, desc MediaDescription) error {
 	f := CreateFuture()
-	C.ntg_set_stream_sources(C.uintptr_t(ctx.ptr), C.int64_t(chatId), streamMode.ParseToC(), desc.ParseToC(), f.ParseToC())
+	cDesc := desc.ParseToC()
+	C.ntg_set_stream_sources(C.uintptr_t(ctx.ptr), C.int64_t(chatId), streamMode.ParseToC(), cDesc, f.ParseToC())
 	f.wait()
+	freeMediaDescriptionC(&cDesc)
 	return parseErrorCode(f)
 }
 
