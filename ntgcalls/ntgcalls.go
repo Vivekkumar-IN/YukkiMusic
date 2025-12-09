@@ -338,6 +338,7 @@ func (ctx *Client) InitExchange(chatId int64, dhConfig DhConfig, gAHash []byte) 
 	f.wait()
 	defer C.free(unsafe.Pointer(buffer))
 	defer C.free(unsafe.Pointer(gAHashC))
+	defer freeDhConfig(&dhConfigC)
 	return C.GoBytes(unsafe.Pointer(buffer), size), parseErrorCode(f)
 }
 

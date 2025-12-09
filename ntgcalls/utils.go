@@ -104,8 +104,12 @@ func parseErrorCode(futureResult *Future) error {
 	errorCode := int32(*futureResult.errCode)
 	if errorCode < 0 {
 		var message string
-		if *futureResult.errMessage != nil {
-			message = C.GoString(*futureResult.errMessage)
+		if futureResult.errMessage != nil {
+			cMessage := *futureResult.errMessage
+			if cMessage != nil {
+				defer C.free(unsafe.Pointer(cMessage))
+				message = C.GoString(cMessage)
+			}
 		}
 		if len(message) == 0 {
 			message = fmt.Sprintf("Error code: %d", errorCode)
