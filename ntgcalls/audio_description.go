@@ -12,18 +12,12 @@ type AudioDescription struct {
 	ChannelCount uint8
 }
 
-func (ctx *AudioDescription) ParseToC() (C.ntg_audio_description_struct, func()) {
+func (ctx *AudioDescription) ParseToC() (C.ntg_audio_description_struct) {
 	var x C.ntg_audio_description_struct
 	x.mediaSource = ctx.MediaSource.ParseToC()
 	x.input = C.CString(ctx.Input)
 	x.sampleRate = C.uint32_t(ctx.SampleRate)
 	x.channelCount = C.uint8_t(ctx.ChannelCount)
 	
-	cleanup := func() {
-		if x.input != nil {
-			C.free(unsafe.Pointer(x.input))
-		}
-	}
-	
-	return x, cleanup
+	return x
 }
