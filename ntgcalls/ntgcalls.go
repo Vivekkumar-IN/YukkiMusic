@@ -168,12 +168,9 @@ func handleSignal(_ C.uintptr_t, chatID C.int64_t, data *C.uint8_t, size C.int, 
 	}
 	
 	goChatID := int64(chatID)
-dataCopy := C.GoBytes(unsafe.Pointer(data), size)
 	
 for _, callback := range self.signalCallbacks {
-        b := make([]byte, len(dataCopy))
-        copy(b, dataCopy)
-        go callback(goChatID, b)
+        go callback(goChatID, C.GoBytes(unsafe.Pointer(data), size))
 }
 }
 
