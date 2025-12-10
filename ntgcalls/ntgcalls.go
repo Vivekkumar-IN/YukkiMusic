@@ -506,8 +506,8 @@ func (ctx *Client) Connect(chatId int64, params string, isPresentation bool) err
 
 func (ctx *Client) SetStreamSources(chatId int64, streamMode StreamMode, desc MediaDescription) error {
 	f := CreateFuture()
-	cDesc, cleanup := desc.ParseToC()
-	defer cleanup()
+	cDesc := desc.ParseToC()
+	defer freeMediaDescriptionC(cDesc)
 	
 	C.ntg_set_stream_sources(C.uintptr_t(ctx.ptr), C.int64_t(chatId), streamMode.ParseToC(), cDesc, f.ParseToC())
 	f.wait()
