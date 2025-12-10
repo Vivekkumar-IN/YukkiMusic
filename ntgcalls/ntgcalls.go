@@ -168,12 +168,13 @@ func handleSignal(_ C.uintptr_t, chatID C.int64_t, data *C.uint8_t, size C.int, 
 	}
 	
 	goChatID := int64(chatID)
-	// Make a copy of the data before passing to goroutine
-	dataCopy := C.GoBytes(unsafe.Pointer(data), size)
+dataCopy := C.GoBytes(unsafe.Pointer(data), size)
 	
-	for _, callback := range self.signalCallbacks {
-		go callback(goChatID, dataCopy)
-	}
+for _, callback := range self.signalCallbacks {
+        b := make([]byte, len(dataCopy))
+        copy(b, dataCopy)
+        go callback(goChatID, b)
+}
 }
 
 //export handleConnectionChange
