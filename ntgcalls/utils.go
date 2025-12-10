@@ -222,21 +222,21 @@ func parseDeviceInfoVector(devices unsafe.Pointer, size C.int) []DeviceInfo {
 	return rawDevices
 }
 
-func freeMediaDescriptionC(desc *C.ntg_media_description_struct) {
-	if desc.microphone != nil {
-		C.free(unsafe.Pointer(desc.microphone.input))
-		C.free(unsafe.Pointer(desc.microphone))
-	}
-	if desc.speaker != nil {
-		C.free(unsafe.Pointer(desc.speaker.input))
-		C.free(unsafe.Pointer(desc.speaker))
-	}
-	if desc.camera != nil {
-		C.free(unsafe.Pointer(desc.camera.input))
-		C.free(unsafe.Pointer(desc.camera))
-	}
-	if desc.screen != nil {
-		C.free(unsafe.Pointer(desc.screen.input))
-		C.free(unsafe.Pointer(desc.screen))
-	}
+func freeMediaDescriptionC(desc C.ntg_media_description_struct) {
+        if desc.microphone != nil {
+                C.free(unsafe.Pointer(desc.microphone.input))
+                C.free(unsafe.Pointer(desc.microphone))
+        }
+        if desc.speaker != nil {
+                C.free(unsafe.Pointer(desc.speaker.input))
+                C.free(unsafe.Pointer(desc.speaker))
+        }
+        if desc.camera != nil {
+                C.free(unsafe.Pointer(desc.camera.input))
+                C.free(unsafe.Pointer(desc.camera))
+        }
+        if desc.screen != nil {
+                C.free(unsafe.Pointer(desc.screen.input))
+                C.free(unsafe.Pointer(desc.screen))
+        }
 }
