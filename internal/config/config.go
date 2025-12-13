@@ -50,6 +50,7 @@ var (
 	LoggerID       = getInt64("LOGGER_ID")
 	DefaultLang    = getString("DEFAULT_LANG", "en")
 	DurationLimit  = int(getInt64("DURATION_LIMIT", 4200)) // in seconds
+	LeaveOnDemoted = getBool("LEAVE_ON_DEMOTED", false)
 	QueueLimit     = int(getInt64("QUEUE_LIMIT", 7))
 	SupportChat    = getString("SUPPORT_CHAT", "https://t.me/TheTeamVk")
 	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/TheTeamVivek")
@@ -78,7 +79,7 @@ func init() {
 		StringSessions = getStringSlice("STRING_SESSION")
 
 		if len(StringSessions) == 0 {
-			logger.Fatal("STRING_SESSIONS is empty — at least one Pyro v2 session string is required.")
+			logger.FatalF("STRING_SESSIONS is empty — at least one %s session string is required.", SessionType)
 			return
 		}
 	}
@@ -110,8 +111,8 @@ func getBool(key string, def ...bool) bool {
 	if ok {
 		boolVal, err := strconv.ParseBool(val)
 		if err != nil {
-			logger.FatalF("Invalid boolean for %s: %v — using default %t", key, err, defaultValue)
-			return defaultValue
+			logger.FatalF("Invalid boolean for %s: %v", key, err)
+			return defaultValue // never runs
 		}
 		return boolVal
 	}
@@ -127,7 +128,7 @@ func getInt64(key string, def ...int64) int64 {
 	if val, ok := getEnvAny(variants(key)...); ok {
 		num, err := strconv.ParseInt(val, 10, 64)
 		if err != nil {
-			logger.FatalF("Invalid int64 for %s: %v — using default %d", key, err, defaultValue)
+			logger.FatalF("Invalid int64 for %s: %v", key, err)
 			return defaultValue
 		}
 		return num

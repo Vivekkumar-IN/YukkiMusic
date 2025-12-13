@@ -178,7 +178,7 @@ func handleAssistantFallback(p *telegram.ParticipantUpdate, chatID int64, s *cor
 }
 
 func handleDemotion(p *telegram.ParticipantUpdate, s *core.ChatState, chatID int64) {
-	if p.UserID() == core.BUser.ID {
+	if p.UserID() == core.BUser.ID && config.LeaveOnDemoted{
 
 		core.DeleteRoom(chatID)
 		core.DeleteChatState(chatID)
