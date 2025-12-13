@@ -420,7 +420,7 @@ This means you can use any of these naming styles, and the bot will find it.
 
 If you're still having issues:
 
-1. Check the main [README](../.github/README.md) for general setup instructions
+1. Check the main [README](../../.github/README.md) for general setup instructions
 2. Join the [Support Chat](https://t.me/TheTeamVk) for community help
 3. Report bugs using the `/bug` command in the bot
 4. Open an issue on [GitHub](https://github.com/TheTeamVivek/YukkiMusic/issues)
@@ -429,8 +429,8 @@ If you're still having issues:
 
 ## 🔗 Related Documentation
 
-- [Main README](../.github/README.md) - General setup and deployment guide
-- [Platform System](../internal/platforms/README.md)- Understanding music sources
+- [Main README](../../.github/README.md) - General setup and deployment guide
+- [Platform System](../platforms/README.md)- Understanding music sources
 
 ---
 
