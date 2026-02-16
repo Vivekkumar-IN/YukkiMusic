@@ -346,3 +346,13 @@ func (y *YtdlpPlatform) isYouTubeURL(urlStr string) bool {
 	}
 	return false
 }
+
+func (y *YtdlpPlatform) CanGetRecommendations() bool {
+	return false
+}
+
+func (y *YtdlpPlatform) GetRecommendations(
+	track *state.Track,
+) ([]*state.Track, error) {
+	return nil, errors.New("recommendations not supported on ytdlp")
+}

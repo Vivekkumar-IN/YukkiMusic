@@ -50,6 +50,7 @@ func (r *RoomState) Play(t *state.Track, path string, force ...bool) error {
 	r.playing = true
 	r.fpath = path
 	r.position = 0
+	r.loop = 0
 	r.paused = false
 	r.muted = false
 	r.updatedAt = time.Now().Unix()

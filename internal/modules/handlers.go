@@ -30,7 +30,6 @@ import (
 	"main/internal/config"
 	"main/internal/core"
 	"main/internal/database"
-	"main/ntgcalls"
 )
 
 type MsgHandlerDef struct {
@@ -171,7 +170,11 @@ var handlers = []MsgHandlerDef{
 		Filters: []telegram.Filter{superGroupFilter},
 	},
 	{Pattern: "(rtmp|setrtmp)", Handler: setRTMPHandler},
-
+	{
+		Pattern: "autoplay",
+		Handler: autoplayHandler,
+		Filters: []telegram.Filter{superGroupFilter, authFilter},
+	},
 	// play/cplay/vplay/fplay commands
 	{
 		Pattern: "play",
@@ -436,6 +439,11 @@ var handlers = []MsgHandlerDef{
 		Handler: creloadHandler,
 		Filters: []telegram.Filter{superGroupFilter, authFilter},
 	},
+	{
+		Pattern: "cautoplay",
+		Handler: cautoplayHandler,
+		Filters: []telegram.Filter{superGroupFilter, authFilter},
+	},
 
 	{
 		Pattern: "(nothumb|nothumbs)",
@@ -482,7 +490,7 @@ func Init(bot *telegram.Client, assistants *core.AssistantManager) {
 	bot.AddActionHandler(handleActions).SetGroup(60)
 
 	assistants.ForEach(func(a *core.Assistant) {
-		a.Ntg.OnStreamEnd(ntgOnStreamEnd)
+		a.Ntg.OnStreamEnd(streamEndHandler)
 	})
 
 	go MonitorRooms()
@@ -501,7 +509,7 @@ func Init(bot *telegram.Client, assistants *core.AssistantManager) {
 		"/cmute", "/cunmute", "/cseek", "/cseekback",
 		"/cjump", "/cremove", "/cclear", "/cmove",
 		"/cspeed", "/creplay", "/cposition", "/cshuffle",
-		"/cloop", "/cqueue", "/creload",
+		"/cloop", "/cqueue", "/creload", "/cautoplay",
 	}
 
 	for _, cmd := range cplayCommands {
@@ -518,14 +526,6 @@ First configure channel using: <code>/channelplay --set [channel_id]</code>
 This command affects the linked channel's voice chat, not the current group.`, baseCmd, baseHelp)
 		}
 	}
-}
-
-func ntgOnStreamEnd(
-	chatID int64,
-	_ ntgcalls.StreamType,
-	_ ntgcalls.StreamDevice,
-) {
-	onStreamEndHandler(chatID)
 }
 
 func setBotCommands(bot *telegram.Client) {

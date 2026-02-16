@@ -331,3 +331,13 @@ func (d *DirectStreamPlatform) enrichMetadata(
 		track.Duration,
 	)
 }
+
+func (d *DirectStreamPlatform) CanGetRecommendations() bool {
+	return false
+}
+
+func (d *DirectStreamPlatform) GetRecommendations(
+	track *state.Track,
+) ([]*state.Track, error) {
+	return nil, fmt.Errorf("recommendations not supported on directstream")
+}

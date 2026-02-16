@@ -70,12 +70,16 @@ type RoomState struct {
 	muted   bool // audio muted
 	paused  bool // playback paused
 
+	autoplay bool // autoplay recommendations
+
 	destroyed atomic.Bool // room destroyed flag
 
 	mystic *telegram.NewMessage // active telegram message
 
 	p                Player // player
 	*scheduledTimers        // playback timers
+
+	Data map[string]any
 }
 
 // Room management functions
@@ -129,6 +133,7 @@ func createNewRoom(chatID int64, ass *Assistant) (*RoomState, bool) {
 			p: &NtgPlayer{
 				Ntg: ass.Ntg,
 			},
+			Data: make(map[string]any),
 		}
 		room.destroyed.Store(false)
 		rooms[chatID] = room
@@ -274,6 +279,17 @@ func (r *RoomState) Track() *state.Track {
 	return r.track
 }
 
+func (r *RoomState) GetData(k string) (bool, any) {
+	if r.destroyed.Load() {
+		return false, nil
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	v, ok := r.Data[k]
+	return ok, v
+}
+
 func (r *RoomState) GetSpeed() float64 {
 	if r.destroyed.Load() {
 		return 0
@@ -292,6 +308,15 @@ func (r *RoomState) GetMystic() *telegram.NewMessage {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.mystic
+}
+
+func (r *RoomState) Autoplay() bool {
+	if r.destroyed.Load() {
+		return false
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.autoplay
 }
 
 func (r *RoomState) Destroyed() bool {
@@ -320,6 +345,30 @@ func (r *RoomState) SetCplayID(chatID int64) {
 	r.cplayID = chatID
 }
 
+func (r *RoomState) SetData(k string, v any) {
+	if r.destroyed.Load() {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.Data == nil {
+		r.Data = make(map[string]any)
+	}
+
+	r.Data[k] = v
+}
+
+func (r *RoomState) DeleteData(k string) {
+	if r.destroyed.Load() {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	delete(r.Data, k)
+}
+
 func (r *RoomState) SetShuffle(enabled bool) {
 	if r.destroyed.Load() {
 		return
@@ -338,12 +387,33 @@ func (r *RoomState) SetMystic(m *telegram.NewMessage) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.mystic != nil {
-		r.mystic.Delete()
+		// r.mystic.Delete()
 	}
 	r.mystic = m
 }
 
+func (r *RoomState) SetAutoplay(enabled bool) {
+	if r.destroyed.Load() {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.autoplay = enabled
+}
+
 // State checks
+
+func (r *RoomState) PrepareForAutoPlay() {
+	if r.destroyed.Load() {
+		return
+	}
+	r.mu.Lock()
+	r.playing = false
+	r.position = 0
+	r.mu.Unlock()
+
+	r.releaseFile()
+}
 
 func (r *RoomState) IsActiveChat() bool {
 	if r.destroyed.Load() {
